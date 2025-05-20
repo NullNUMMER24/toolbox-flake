@@ -19,6 +19,7 @@
           vim
           htop
           curl
+          figlet
         ];
       in {
         packages = {
@@ -40,8 +41,7 @@
         devShells.default = pkgs.mkShell {
           buildInputs = [ remminaVanilla ] ++ extraPackages;
           shellHook = ''
-            echo "Remmina shell ready – version: $(remmina --version)"
-            echo "Extras installed: vim, htop, curl"
+            figlet TOOLBOX
           '';
         };
       }
