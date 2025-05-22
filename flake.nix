@@ -1,5 +1,5 @@
 {
-  description = "A Nix flake providing a vanilla Remmina build and example of adding additional packages.";
+  description = "A Nix flake providing Remmina with SMB support";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
@@ -11,37 +11,50 @@
       let
         pkgs = import nixpkgs { inherit system; };
 
-        # Use the upstream Remmina without any plugins
+        # Keep original Remmina configuration
         remminaVanilla = pkgs.remmina;
 
-        # Example list of extra packages you might install
-        extraPackages = with pkgs; [
+        # Minimal SMB support packages
+        smbSupportPackages = with pkgs; [
+          gnome.gvfs # Includes SMB support
+          samba      # SMB client/server
+          cifs-utils # Mounting tools
+        ];
+
+        # Your existing extra packages
+        baseExtraPackages = with pkgs; [
           vim
           htop
           curl
         ];
+
+        # Combined packages
+        extraPackages = baseExtraPackages ++ smbSupportPackages;
       in {
         packages = {
-          # Expose Remmina and extras as separate attributes
           remmina = remminaVanilla;
           extras = pkgs.stdenv.mkDerivation {
             name = "extras";
             buildInputs = extraPackages;
-            # no build step; this derivation just groups tools
             unpackPhase = ''true'';
             installPhase = ''mkdir -p $out && true'';
           };
         };
 
-        # Default package: Remmina
         defaultPackage = remminaVanilla;
 
-        # Development shell including Remmina and any extras
         devShells.default = pkgs.mkShell {
           buildInputs = [ remminaVanilla ] ++ extraPackages;
+          
+          # Required for GVFS/SMB
+          env = {
+            GIO_EXTRA_MODULES = "${pkgs.gvfs}/lib/gio/modules";
+          };
+          
           shellHook = ''
-            echo "Remmina shell ready – version: $(remmina --version)"
-            echo "Extras installed: vim, htop, curl"
+            echo "Remmina ready – version: $(remmina --version)"
+            echo "SMB support enabled"
+            echo "Use 'gio mount smb://server/share' to access SMB shares"
           '';
         };
       }
