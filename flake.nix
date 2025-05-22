@@ -26,6 +26,7 @@
           vim
           htop
           curl
+          figlet
         ];
 
         # Combined packages
@@ -52,9 +53,7 @@
           };
           
           shellHook = ''
-            echo "Remmina ready – version: $(remmina --version)"
-            echo "SMB support enabled"
-            echo "Use 'gio mount smb://server/share' to access SMB shares"
+            figlet TOOLBOX
           '';
         };
       }
